@@ -11,3 +11,4 @@ public class Day3StudentManagementSystemApplication {
     }
 
 }
+//controller- request, service-logic,  repository-databse,   model- database schema

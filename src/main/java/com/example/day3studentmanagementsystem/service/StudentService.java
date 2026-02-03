@@ -2,45 +2,86 @@ package com.example.day3studentmanagementsystem.service;
 
 import com.example.day3studentmanagementsystem.model.StudentModel;
 import com.example.day3studentmanagementsystem.repository.StudentRepository;
+import com.example.day3studentmanagementsystem.dto.StudentRequestDto;
+import com.example.day3studentmanagementsystem.dto.StudentResponseDto;
+import com.example.day3studentmanagementsystem.Exception.StudentNotFound;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 @Service
 public class StudentService {
-
-    private final  StudentRepository repository;
+    private final StudentRepository repository;
 
     public StudentService(StudentRepository repository) {
         this.repository = repository;
     }
 
-    //create
-    public StudentModel addStudent(StudentModel student){
-        return repository.save(student);
+    // create
+
+    public StudentResponseDto addStudent(StudentRequestDto dto ) {
+        StudentModel student = new StudentModel();
+        student.setName(dto.getName());
+        student.setAge(dto.getAge());
+        student.setEmail(dto.getEmail());
+
+        StudentModel saved = repository.save(student);
+
+        return new StudentResponseDto(
+                saved.getId(),
+                saved.getName(),
+                saved.getAge(),
+                saved.getEmail()
+        );
     }
 
-    //display
-    public List<StudentModel> getStudent(){
-        return repository.findAll();
+    // Display
+
+    public List<StudentResponseDto> getStudent() {
+        return repository.findAll()
+                .stream()
+                .map(student -> new StudentResponseDto(
+                        student.getId(),
+                        student.getName(),
+                        student.getAge(),
+                        student.getEmail()
+                ))
+                .toList();
     }
+
 
     //update
-    public StudentModel updateStudent(String id,StudentModel student){
-        StudentModel existingStudent=repository.findById(id)
-                .orElseThrow(()-> new RuntimeException("No student found"));
-        existingStudent.setName(student.getName());
-        existingStudent.setAge(student.getAge());
-        existingStudent.setEmail(student.getEmail());
 
-        return repository.save(existingStudent);
+    public StudentResponseDto update(String id, @Valid StudentRequestDto dto) {
+        StudentModel existing = repository.findById(id)
+                .orElseThrow(() -> new StudentNotFound("Student not found"));
+
+        existing.setName(dto.getName());
+        existing.setAge(dto.getAge());
+        existing.setEmail(dto.getEmail());
+
+        StudentModel saved = repository.save(existing);
+
+        return new StudentResponseDto(
+                saved.getId(),
+                saved.getName(),
+                saved.getAge(),
+                saved.getEmail()
+        );
     }
+
 
     // delete
-    public void deleteStudent(String id) {
-        StudentModel existingStudent = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No student found"));
 
-        repository.delete(existingStudent);
+
+    public StudentResponseDto delete(String id){
+        StudentModel existing =  repository.findById(id)
+                .orElseThrow(() -> new StudentNotFound("no student found"));
+        repository.delete(existing);
+
+        return null;
     }
+
 }
